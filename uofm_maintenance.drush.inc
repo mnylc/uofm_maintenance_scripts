@@ -56,54 +56,8 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_fix_tiff_worker',
       UOFM_MAINTENANCE_FIX_TIFFS_QUEUE,
-      UOFM_MAINTENANCE_FIX_TIFFS_TIMER,
     ),
     'description' => 'Process the queue of objects generated with uofm_fix_mt_pp, correct all image/tif mimetypes to image/tiff',
-    'drupal dependencies' => array(
-      'islandora',
-    ),
-    'category' => 'uofm_maintenance_scripts',
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
-  );
-  $items['uofm_maintenance_regen_jp2_pp'] = array(
-    'options' => array(
-      'query' => array(
-        'description' => 'The SPARQL where clause, uses "?object" as the returned variable.',
-      ),
-      'pid' => array(
-        'description' => 'A PID to operate on',
-      ),
-      'pidlist' => array(
-        'description' => 'A comma seperated list of PIDs to operate on',
-      ),
-      'pidfile' => array(
-        'description' => 'Path to a textfile of PIDs to operate on, one per line',
-      ),
-    ),
-    'aliases' => array('uofm_regen_jp2_pp'),
-    'callback' => 'drush_uofm_maintenance_preprocess',
-    'callback arguments' => array(UOFM_MAINTENANCE_REGEN_JP2_QUEUE, FALSE),
-    'description' => 'Add a list of objects to a queue to have the JP2 regenerated',
-    'drupal dependencies' => array(
-      'islandora',
-    ),
-    'category' => 'uofm_maintenance_scripts',
-    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
-  );
-  $items['uofm_maintenance_regen_jp2_run'] = array(
-    'options' => array(
-      'timeout' => array(
-        'description' => 'Length of time to run, or until queue is empty if omitted',
-      ),
-    ),
-    'aliases' => array('uofm_regen_jp2_run'),
-    'callback' => 'drush_uofm_maintenance_run',
-    'callback arguments' => array(
-      'uofm_maintenance_regen_jp2_worker',
-      UOFM_MAINTENANCE_REGEN_JP2_QUEUE,
-      UOFM_MAINTENANCE_REGEN_JP2_TIMER,
-    ),
-    'description' => 'Process the queue of objects generated with uofm_regen_jp2_pp, regenerate JP2 for all objects',
     'drupal dependencies' => array(
       'islandora',
     ),
@@ -187,7 +141,6 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_derivative_fixer_worker',
       UOFM_MAINTENANCE_DERIVATIVE_FIXER_QUEUE,
-      UOFM_MAINTENANCE_DERIVATIVE_FIXER_TIMER,
       300,
     ),
     'description' => 'Process the queue of objects generated with uofm_regen_jp2_pp, regenerate JP2 for all objects',
@@ -253,7 +206,6 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_update_parent_worker',
       UOFM_MAINTENANCE_UPDATE_PARENT_QUEUE,
-      UOFM_MAINTENANCE_UPDATE_PARENT_QUEUE,
       300,
     ),
     'description' => 'Process the queue of objects generated with uofm_maintenance_update_parent_pp,' .
@@ -306,7 +258,6 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_update_xacml_worker',
       UOFM_MAINTENANCE_COPY_XACML_QUEUE,
-      UOFM_MAINTENANCE_COPY_XACML_QUEUE,
       300,
     ),
     'description' => 'Process the queue of objects generated with preprocess, copy XACML policy from one object to a set of others.',
@@ -353,7 +304,6 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_fix_dates_worker',
       'uofm_maintenance_fix_dates_queue',
-      'uofm_maintenance_fix_dates_timer',
       300,
     ),
     'description' => 'Process the queue of objects generated with preprocess, update the MODS datastream to alter dates. Must have privileges to update the objects.',
@@ -376,6 +326,17 @@ function uofm_maintenance_drush_command() {
       ),
       'query' => array(
         'description' => 'The SPARQL where clause, uses "?object" as the returned variable.',
+      ),
+      'recursive' => array(
+        'description' => 'Process any children of the objects listed/queried',
+      ),
+      'old_date' => array(
+        'description' => 'The old date in YYYY-MM-DD format to find.',
+        'required' => TRUE,
+      ),
+      'new_date' => array(
+        'description' => 'The new date in YYYY-MM-DD format to replace with.',
+        'required' => TRUE,
       ),
     ),
     'callback' => 'drush_uofm_maintenance_preprocess',
@@ -400,10 +361,58 @@ function uofm_maintenance_drush_command() {
     'callback arguments' => array(
       'uofm_maintenance_fix_MODS',
       'uofm_maintenance_move_dates_queue',
-      'uofm_maintenance_move_dates_timer',
       300,
     ),
     'description' => 'Process the queue of objects generated with preprocess, update the MODS datastream to alter dates. Must have privileges to update the objects.',
+    'drupal dependencies' => array(
+      'islandora',
+    ),
+    'category' => 'uofm_maintenance_scripts',
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+  );
+  $items['uofm_maintenance_update_tn_from_child_pp'] = array(
+    'options' => array(
+      'pid' => array(
+        'description' => 'A PID to operate on',
+      ),
+      'pidlist' => array(
+        'description' => 'A comma seperated list of PIDs to operate on',
+      ),
+      'pidfile' => array(
+        'description' => 'Path to a textfile of PIDs to operate on, one per line',
+      ),
+      'query' => array(
+        'description' => 'The SPARQL where clause, uses "?object" as the returned variable.',
+      ),
+      'recursive' => array(
+        'description' => 'Process any children of the objects listed/queried',
+      ),
+    ),
+    'callback' => 'drush_uofm_maintenance_preprocess',
+    'callback arguments' => array(
+      'uofm_maintenance_update_tn_from_child_queue',
+      FALSE,
+    ),
+    'description' => 'Update the current object with a child\'s TN, only works on compounds, books and newspapers.',
+    'drupal dependencies' => array(
+      'islandora',
+    ),
+    'category' => 'uofm_maintenance_scripts',
+    'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
+  );
+  $items['uofm_maintenance_update_tn_from_child_run'] = array(
+    'options' => array(
+      'timeout' => array(
+        'description' => 'Length of time to run, or until queue is empty if omitted',
+      ),
+    ),
+    'callback' => 'drush_uofm_maintenance_run',
+    'callback arguments' => array(
+      'uofm_maintenance_update_tn_from_child_worker',
+      'uofm_maintenance_update_tn_from_child_queue',
+      300,
+    ),
+    'description' => 'Process the queue of objects generated with preprocess, update thumbnail based on first child. Must have privileges to update the objects.',
     'drupal dependencies' => array(
       'islandora',
     ),
@@ -504,17 +513,15 @@ function drush_uofm_maintenance_preprocess($queue_name, $filter = FALSE, $custom
  *   name of the function to pass the queue data to
  * @param string $queue_name
  *   name of the queue to read items from
- * @param string $timer
- *   name of the timer use for timeout limits
  * @param int $lease
  *   length of time to claim each item for
  */
-function drush_uofm_maintenance_run($worker_fn, $queue_name, $timer, $lease = 100) {
+function drush_uofm_maintenance_run($worker_fn, $queue_name, $lease = 100) {
   drupal_static_reset('islandora_get_tuque_connection');
   $timeout = drush_get_option('timeout', ini_get('max_execution_time'));
   $queue = DrupalQueue::get($queue_name);
-  timer_start($timer);
-  while (($timeout == 0 || (timer_read($timer) / 1000) < $timeout) && ($item = $queue->claimItem($lease)) !== FALSE) {
+  timer_start($queue_name);
+  while (($timeout == 0 || (timer_read($queue_name) / 1000) < $timeout) && ($item = $queue->claimItem($lease)) !== FALSE) {
     if (is_object($item) && isset($item->data)) {
       $res = $worker_fn($item->data);
       if ($res === TRUE) {
@@ -544,7 +551,7 @@ function drush_uofm_maintenance_run($worker_fn, $queue_name, $timer, $lease = 10
       }
     }
   }
-  timer_stop($timer);
+  timer_stop($queue_name);
 }
 
 /**

@@ -64,34 +64,6 @@ function uofm_maintenance_fix_tiff_worker($object) {
 }
 
 /**
- * Regenerate JP2 derivative from OBJ/TIFF.
- *
- * @param string|AbstractObject $object
- *   the string PID or a Fedora Object
- */
-function uofm_maintenance_regen_jp2_worker($object) {
-  $obj = FALSE;
-  if (is_string($object)) {
-    module_load_include('inc', 'islandora', 'includes/utilities');
-    if (islandora_is_valid_pid($object)) {
-      $obj = islandora_object_load($object);
-    }
-  }
-  if (is_a($object, 'AbstractObject')) {
-    $obj = $object;
-  }
-  if (isset($obj['OBJ']) || isset($obj['TIFF'])) {
-    if ((isset($obj['OBJ']) && isset($obj['JP2']) && ($obj['OBJ']->size * 0.001) > $obj['JP2']->size) ||
-      (isset($obj['TIFF']) && isset($obj['JP2']) && ($obj['TIFF']->size * 0.001) > $obj['JP2']->size)) {
-      module_load_include('inc', 'islandora_large_image', 'includes/derivatives');
-      drush_log("Regenerate JP2 for " . $obj->id, "ok");
-      islandora_large_image_create_jp2_derivative($obj);
-    }
-  }
-  return TRUE;
-}
-
-/**
  * Custom queue generation for derivative fixer.
  *
  * @var $pid string
@@ -220,6 +192,9 @@ function uofm_maintenance_update_parent_worker($data) {
  *
  * @param string $pid
  *   the PID for this action.
+ *
+ * @return array
+ *   custom queue with to and from keys.
  */
 function uofm_maintenance_copy_xacml_custom_queue($pid) {
   $from = drush_get_option('from_pid', NULL);
@@ -278,7 +253,7 @@ function uofm_maintenance_update_xacml_worker($data) {
  * @param $pid string
  *   The pid of the object to process
  *
- * return boolean
+ * @return boolean
  *   Did it succeed?
  */
 function uofm_maintenance_fix_dates_worker($pid) {
@@ -455,4 +430,28 @@ function uofm_maintenance_fix_MODS($pid) {
       return TRUE;
     }
   }
+}
+
+/**
+ * Causes an attempt to update the object's TN from it's children.
+ *
+ * @var string $pid
+ *    The pid of the object.
+ * @return bool
+ *    Whether we updated the TN or not.
+ */
+function uofm_maintenance_update_tn_from_child_worker($pid) {
+  $valid_cmodels = array(
+    'islandora:newspaperIssueCModel',
+    'islandora:bookCModel'.
+  );
+
+  $object = islandora_object_load($pid);
+  if ($object) {
+    if (array_intersect($valid_cmodels, $object->models)) {
+      module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+      return islandora_paged_content_update_paged_content_thumbnail($object);
+    }
+  }
+  return FALSE;
 }
